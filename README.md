@@ -201,6 +201,47 @@ The application uses Python's built-in logging module with INFO level by default
    - Check the starting row configuration
    - Verify MAC address format
 
+## GitHub Integration
+
+### GitHub Actions
+
+This project includes a GitHub Actions workflow (`.github/workflows/deploy.yml`) that:
+
+1. **Tests** your code on every push and pull request
+2. **Lints** code for style and quality
+3. **Builds** a Docker image to ensure it works
+4. **Tests** the Docker image to verify deployment readiness
+
+### Running Locally with GitHub Codespaces
+
+You can run this application directly in GitHub Codespaces:
+
+1. **Open in Codespaces**: Click the green "Code" button and select "Open with Codespaces"
+2. **Install dependencies**: `uv sync`
+3. **Set environment variables**: Create a `.env` file with your configuration
+4. **Run the app**: `uv run main.py`
+
+### Environment Variables
+
+For local development or Codespaces, create a `.env` file with:
+
+- `GOOGLE_SHEET_ID`
+- `GOOGLE_SHEET_PAGE`
+- `REMNA_BASE_URL`
+- `REMNA_TOKEN`
+- `REMNA_TAG`
+- `REMNA_DEFAULT_STATUS`
+- `REMNA_INBOUND`
+- `DAYS_TO_ADD`
+
+### Google Sheets Credentials
+
+For local development, place your `credentials.json` file in the project root. For Codespaces, you can:
+
+1. **Upload the file** directly to the Codespace
+2. **Base64 encode** and store as an environment variable
+3. **Use Google Cloud IAM** instead of service account keys
+
 ## License
 
 [Add your license information here]

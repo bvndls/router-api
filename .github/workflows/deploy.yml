@@ -1,0 +1,50 @@
+name: Test and Build Router API
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install uv
+      uses: astral-sh/setup-uv@v1
+      with:
+        version: latest
+    
+    - name: Install dependencies
+      run: uv sync
+    
+    - name: Run tests (if you add them later)
+      run: |
+        # Add test commands here when you create tests
+        echo "Tests would run here"
+    
+    - name: Lint code
+      run: |
+        # Install linting tools if needed
+        uv add --dev flake8 black isort
+        uv run flake8 .
+        uv run black --check .
+        uv run isort --check-only .
+    
+    - name: Build Docker image
+      run: |
+        docker build -t router-api .
+    
+    - name: Test Docker image
+      run: |
+        docker run --rm -d --name test-router-api -p 8000:8000 router-api
+        sleep 10
+        curl -f http://localhost:8000/docs || exit 1
+        docker stop test-router-api
