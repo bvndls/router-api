@@ -91,12 +91,39 @@ DAYS_TO_ADD=365
 
 ### Running the API
 
+#### Local Development
 ```bash
-# Development
+# Using uv directly
 uv run main.py
 
-# Production with uvicorn
+# Using uvicorn
 uv run uvicorn main:app --host 0.0.0.0 --port 8000
+```
+
+#### Using Docker Compose
+
+**Production:**
+```bash
+# Build and run
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop
+docker-compose down
+```
+
+**Development (with hot reload):**
+```bash
+# Build and run with hot reload
+docker-compose -f docker-compose.dev.yml up -d
+
+# View logs
+docker-compose -f docker-compose.dev.yml logs -f
+
+# Stop
+docker-compose -f docker-compose.dev.yml down
 ```
 
 ### API Endpoints

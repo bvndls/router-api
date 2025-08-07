@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  router-api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      # Google Sheets Configuration
+      - GOOGLE_SHEET_ID=${GOOGLE_SHEET_ID}
+      - GOOGLE_SHEET_PAGE=${GOOGLE_SHEET_PAGE}
+      - GOOGLE_CREDENTIALS=${GOOGLE_CREDENTIALS}
+      
+      # Remna API Configuration
+      - REMNA_BASE_URL=${REMNA_BASE_URL}
+      - REMNA_TOKEN=${REMNA_TOKEN}
+      - REMNA_TAG=${REMNA_TAG}
+      - REMNA_DEFAULT_STATUS=${REMNA_DEFAULT_STATUS}
+      - REMNA_INBOUND=${REMNA_INBOUND}
+      
+      # Application Configuration
+      - DAYS_TO_ADD=${DAYS_TO_ADD:-365}
+    volumes:
+      # Mount credentials.json if you prefer file-based auth
+      - ./credentials.json:/app/credentials.json:ro
+      # Mount .env file for local development
+      - ./.env:/app/.env:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/docs"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
