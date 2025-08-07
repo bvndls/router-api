@@ -234,6 +234,8 @@ For local development or Codespaces, create a `.env` file with:
 - `REMNA_INBOUND`
 - `DAYS_TO_ADD`
 
+**⚠️ Security Note**: Never commit your `.env` file to the repository. It's already in `.gitignore` to prevent accidental commits.
+
 ### Google Sheets Credentials
 
 For local development, place your `credentials.json` file in the project root. For Codespaces, you can:

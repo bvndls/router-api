@@ -36,7 +36,16 @@ jobs:
     
     - name: Test Docker image
       run: |
-        docker run --rm -d --name test-router-api -p 8000:8000 router-api
+        docker run --rm -d --name test-router-api -p 8000:8000 \
+          -e GOOGLE_SHEET_ID="${{ secrets.GOOGLE_SHEET_ID }}" \
+          -e GOOGLE_SHEET_PAGE="${{ secrets.GOOGLE_SHEET_PAGE }}" \
+          -e REMNA_BASE_URL="${{ secrets.REMNA_BASE_URL }}" \
+          -e REMNA_TOKEN="${{ secrets.REMNA_TOKEN }}" \
+          -e REMNA_TAG="${{ secrets.REMNA_TAG }}" \
+          -e REMNA_DEFAULT_STATUS="${{ secrets.REMNA_DEFAULT_STATUS }}" \
+          -e REMNA_INBOUND="${{ secrets.REMNA_INBOUND }}" \
+          -e DAYS_TO_ADD="${{ secrets.DAYS_TO_ADD }}" \
+          router-api
         sleep 10
         curl -f http://localhost:8000/docs || exit 1
         docker stop test-router-api
