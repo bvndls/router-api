@@ -7,6 +7,8 @@ import gspread
 import uvicorn
 import os
 import logging
+import json
+import base64
 from typing import Optional
 import script_exceptions as excp
 
@@ -67,6 +69,10 @@ class VlessCreation:
             missing_configs.append("REMNA_TOKEN")
         if not os.getenv("GOOGLE_SHEET_PAGE"):
             missing_configs.append("GOOGLE_SHEET_PAGE")
+        
+        # Check for Google credentials (either file or environment variable)
+        if not os.path.exists("credentials.json") and not os.getenv("GOOGLE_CREDENTIALS"):
+            missing_configs.append("GOOGLE_CREDENTIALS (or credentials.json file)")
 
         if missing_configs:
             raise excp.ConfigurationError(
@@ -80,12 +86,33 @@ class VlessCreation:
     ) -> None:
         """Initialize Google Sheets connection"""
         try:
-            google_service = gspread.service_account(
-                filename=credentials_file_path,
-            )
-            logger.info(
-                "Google Sheets service initialized successfully",
-            )
+            # Try to get credentials from environment variable first
+            google_credentials_env = os.getenv("GOOGLE_CREDENTIALS")
+            
+            if google_credentials_env:
+                # Decode base64 credentials from environment variable
+                try:
+                    credentials_json = base64.b64decode(google_credentials_env).decode('utf-8')
+                    credentials_dict = json.loads(credentials_json)
+                    google_service = gspread.service_account_from_dict(credentials_dict)
+                    logger.info(
+                        "Google Sheets service initialized from environment variable",
+                    )
+                except Exception as e:
+                    logger.error(
+                        f"Failed to decode Google credentials from environment: {e}",
+                    )
+                    raise excp.CredentialsError(
+                        f"Failed to decode Google credentials from environment: {e}",
+                    )
+            else:
+                # Fall back to file-based credentials
+                google_service = gspread.service_account(
+                    filename=credentials_file_path,
+                )
+                logger.info(
+                    "Google Sheets service initialized from file",
+                )
         except FileNotFoundError:
             logger.error(
                 f"Credentials file '{credentials_file_path}' not found",

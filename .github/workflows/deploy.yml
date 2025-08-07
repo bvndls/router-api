@@ -39,6 +39,7 @@ jobs:
         docker run --rm -d --name test-router-api -p 8000:8000 \
           -e GOOGLE_SHEET_ID="${{ secrets.GOOGLE_SHEET_ID }}" \
           -e GOOGLE_SHEET_PAGE="${{ secrets.GOOGLE_SHEET_PAGE }}" \
+          -e GOOGLE_CREDENTIALS="${{ secrets.GOOGLE_CREDENTIALS }}" \
           -e REMNA_BASE_URL="${{ secrets.REMNA_BASE_URL }}" \
           -e REMNA_TOKEN="${{ secrets.REMNA_TOKEN }}" \
           -e REMNA_TAG="${{ secrets.REMNA_TAG }}" \

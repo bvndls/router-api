@@ -238,11 +238,27 @@ For local development or Codespaces, create a `.env` file with:
 
 ### Google Sheets Credentials
 
-For local development, place your `credentials.json` file in the project root. For Codespaces, you can:
+You have two options for Google Sheets credentials:
 
-1. **Upload the file** directly to the Codespace
-2. **Base64 encode** and store as an environment variable
-3. **Use Google Cloud IAM** instead of service account keys
+#### Option 1: Environment Variable (Recommended for Deployment)
+1. **Encode your credentials.json**:
+   ```bash
+   # Using the helper script (recommended)
+   python encode_credentials.py
+   
+   # Or manually
+   base64 -i credentials.json | tr -d '\n'
+   ```
+2. **Add to environment variables**:
+   - Local: Add `GOOGLE_CREDENTIALS=your_encoded_credentials` to `.env`
+   - Deployment: Add as `GOOGLE_CREDENTIALS` secret in your platform
+
+#### Option 2: File-based (Local Development)
+1. **Place credentials.json** in the project root
+2. **The app will automatically detect** and use the file
+
+#### Option 3: Google Cloud IAM (Advanced)
+Use Google Cloud IAM instead of service account keys for better security.
 
 ## License
 
