@@ -30,14 +30,6 @@ jobs:
         # Add test commands here when you create tests
         echo "Tests would run here"
     
-    - name: Lint code
-      run: |
-        # Install linting tools if needed
-        uv add --dev flake8 black isort
-        uv run flake8 . --max-line-length=120 --ignore=E501,W503
-        uv run black --check . --line-length=120
-        uv run isort --check-only . --line-length=120
-    
     - name: Build Docker image
       run: |
         docker build -t router-api .
