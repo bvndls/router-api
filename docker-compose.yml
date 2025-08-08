@@ -18,6 +18,10 @@ services:
       - REMNA_DEFAULT_STATUS=${REMNA_DEFAULT_STATUS}
       - REMNA_INBOUND=${REMNA_INBOUND}
       
+      # Tailscale Configuration
+      - TAILSCALE_BASE_URL=${TAILSCALE_BASE_URL}
+      - TAILSCALE_AUTH_KEY=${TAILSCALE_AUTH_KEY}
+      
       # Application Configuration
       - DAYS_TO_ADD=${DAYS_TO_ADD:-365}
     volumes:
