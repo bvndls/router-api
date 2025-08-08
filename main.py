@@ -560,13 +560,16 @@ async def tailscale(
                 "tailscale_check",
             )
 
-        # Return the Tailscale key for authorized MAC addresses
-        tailscale_key = "e5ae8bd59f474ff9b25a40b2e2f57c43077dea8440077110"
+        # Return the Tailscale command for authorized MAC addresses
+        tailscale_server = os.getenv("TAILSCALE_BASE_URL")
+        tailscale_auth_key = os.getenv("TAILSCALE_AUTH_KEY")
+        
+        tailscale_command = f"--login-server=https://{tailscale_server} --authkey {tailscale_auth_key}"
 
         logger.info(
             f"Successfully processed Tailscale request for MAC address: {mac_address}",
         )
-        return tailscale_key
+        return tailscale_command
 
     except excp.VlessCreationException:
         raise

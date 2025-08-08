@@ -4,19 +4,20 @@ A FastAPI-based service that validates MAC addresses against a Google Sheets dat
 
 ## Overview
 
-This API serves as a bridge between device authentication and proxy service provisioning. It:
+This API serves as a bridge between device authentication and service provisioning. It:
 
 1. Receives MAC address requests
 2. Validates them against a Google Sheets database
-3. Creates users in the Remna proxy service (if not already existing)
-4. Returns VLESS proxy links for authorized devices
+3. Creates users in the Remna proxy service (for VLESS) or checks Tailscale server availability
+4. Returns VLESS proxy links or Tailscale keys for authorized devices
 
 ## Features
 
 - **MAC Address Validation**: Checks incoming MAC addresses against a Google Sheets database
-- **Automatic User Creation**: Creates users in Remna proxy service for new MAC addresses
+- **Automatic User Creation**: Creates users in Remna proxy service for new MAC addresses (VLESS endpoint)
 - **VLESS Link Generation**: Provides VLESS proxy links for authorized devices
-- **Error Handling**: Comprehensive error handling with detailed logging
+- **Tailscale Key Provisioning**: Provides Tailscale keys for authorized devices with server availability check
+- **Error Handling**: Comprehensive error handling with detailed logging and service-specific error codes
 - **RESTful API**: Clean FastAPI-based REST endpoints
 
 ## Prerequisites
@@ -64,11 +65,15 @@ GOOGLE_SHEET_ID=your_google_sheet_id
 GOOGLE_SHEET_PAGE=Sheet1
 
 # Remna API Configuration
-REMNA_BASE_URL=https://your-remna-instance.com
+REMNA_BASE_URL=https://your-remna-instance.tld
 REMNA_TOKEN=your_remna_api_token
 REMNA_TAG=default_tag
 REMNA_DEFAULT_STATUS=active
 REMNA_INBOUND=default_inbound
+
+# Tailscale Configuration
+TAILSCALE_BASE_URL=your-tailscale-instance.tld
+TAILSCALE_AUTH_KEY=your_tailscale_auth_key
 
 # Application Configuration
 DAYS_TO_ADD=365
@@ -86,6 +91,13 @@ DAYS_TO_ADD=365
 1. Obtain your Remna API base URL
 2. Generate an API token with appropriate permissions
 3. Configure the default tag, status, and inbound settings
+
+### Tailscale Setup
+
+1. Configure the Tailscale server URL for availability checking
+2. Configure the Tailscale auth key for device authentication
+3. The API will perform a ping-like connectivity test to ensure server availability
+4. Returns a complete Tailscale command that can be used directly with `tailscale up`
 
 ## Usage
 
@@ -128,7 +140,7 @@ docker-compose -f docker-compose.dev.yml down
 
 ### API Endpoints
 
-#### POST `/check`
+#### POST `/vless`
 
 Validates a MAC address and returns a VLESS link.
 
@@ -145,9 +157,36 @@ Validates a MAC address and returns a VLESS link.
 
 **Example:**
 ```bash
-curl -X POST http://localhost:8000/check \
+curl -X POST http://localhost:8000/vless \
   -H "Content-Type: application/json" \
   -d '{"mac_address": "00:11:22:33:44:55"}'
+```
+
+#### POST `/tailscale`
+
+Validates a MAC address and returns a Tailscale command.
+
+**Request Body:**
+```json
+{
+  "mac_address": "00:11:22:33:44:55"
+}
+```
+
+**Response:**
+- **Success**: Returns the Tailscale command as a string (e.g., `--login-server=https://TAILSCALE_BASE_URL--authkey TAILSCALE_AUTH_KEY`)
+- **Error**: Returns error details with appropriate HTTP status codes
+
+**Example:**
+```bash
+curl -X POST http://localhost:8000/tailscale \
+  -H "Content-Type: application/json" \
+  -d '{"mac_address": "00:11:22:33:44:55"}'
+```
+
+**Example Response:**
+```
+--login-server=https://TAILSCALE_BASE_URL --authkey TAILSCALE_AUTH_KEY
 ```
 
 ### Error Handling
@@ -166,6 +205,7 @@ Common error codes:
 - `MAC_ADDRESS_NOT_FOUND`: MAC address not found in Google Sheet
 - `INVALID_MAC_ADDRESS`: Invalid MAC address format
 - `REMNA_API_ERROR`: Remna API communication error
+- `TAILSCALE_SERVER_ERROR`: Tailscale server connectivity error
 - `GOOGLE_SHEET_ACCESS_ERROR`: Google Sheets access error
 - `CONFIGURATION_ERROR`: Missing or invalid configuration
 
@@ -177,6 +217,7 @@ Common error codes:
 router-api/
 ├── main.py                 # Main FastAPI application
 ├── script_exceptions.py    # Custom exception classes
+├── encode_credentials.py   # Helper script for encoding credentials
 ├── pyproject.toml         # Project dependencies and metadata
 ├── credentials.json       # Google Sheets API credentials (not in repo)
 ├── .env                   # Environment variables (not in repo)
@@ -259,6 +300,8 @@ For local development or Codespaces, create a `.env` file with:
 - `REMNA_TAG`
 - `REMNA_DEFAULT_STATUS`
 - `REMNA_INBOUND`
+- `TAILSCALE_BASE_URL`
+- `TAILSCALE_AUTH_KEY`
 - `DAYS_TO_ADD`
 
 **⚠️ Security Note**: Never commit your `.env` file to the repository. It's already in `.gitignore` to prevent accidental commits.
