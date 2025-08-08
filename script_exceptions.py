@@ -11,6 +11,7 @@ class ErrorCode(Enum):
     VLESS_LINK_RETRIEVAL_FAILED = "VLESS_LINK_RETRIEVAL_FAILED"
     INVALID_MAC_ADDRESS = "INVALID_MAC_ADDRESS"
     REMNA_API_ERROR = "REMNA_API_ERROR"
+    TAILSCALE_SERVER_ERROR = "TAILSCALE_SERVER_ERROR"
     CONFIGURATION_ERROR = "CONFIGURATION_ERROR"
 
 
@@ -95,6 +96,21 @@ class RemnaApiError(VlessCreationException):
         super().__init__(
             message,
             error_code,
+            502,
+        )
+
+
+class TailscaleServerError(VlessCreationException):
+    """Raised when Tailscale server operations fail"""
+
+    def __init__(
+        self,
+        message: str,
+        operation: str,
+    ):
+        super().__init__(
+            message,
+            ErrorCode.TAILSCALE_SERVER_ERROR,
             502,
         )
 

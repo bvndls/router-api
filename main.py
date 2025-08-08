@@ -419,8 +419,8 @@ async def general_exception_handler(
     )
 
 
-@app.post("/check")
-async def check(
+@app.post("/vless")
+async def vless(
     request: Request,
 ):
     """Check MAC address and return VLESS link"""
@@ -476,7 +476,103 @@ async def check(
         raise
     except Exception as e:
         logger.error(
-            f"Unexpected error in check endpoint: {e}",
+            f"Unexpected error in vless endpoint: {e}",
+            exc_info=True,
+        )
+        raise excp.VlessCreationException(
+            "Internal server error occurred",
+            excp.ErrorCode.REMNA_API_ERROR,
+            500,
+        )
+
+
+@app.post("/tailscale")
+async def tailscale(
+    request: Request,
+):
+    """Check MAC address and return Tailscale key"""
+    try:
+        data = await request.json()
+        mac_address = data.get("mac_address")
+
+        if not mac_address:
+            raise excp.MacAddressError(
+                "MAC address is required",
+            )
+
+        logger.info(
+            f"Processing Tailscale request for MAC address: {mac_address}",
+        )
+
+        mac_checker = VlessCreation()
+
+        if not mac_checker.check_mac(mac_address):
+            raise excp.MacAddressError(
+                "MAC address not found in Google Sheet",
+                not_found=True,
+            )
+
+        # Validate Tailscale server availability
+        try:
+            logger.info(
+                f"Checking Tailscale server availability for MAC address: {mac_address}",
+            )
+            
+            # Check connectivity to Tailscale server using socket (ping-like)
+            import socket
+            
+            # Try to connect to the server on port 443 (HTTPS)
+            tailscale_base_url = os.getenv("TAILSCALE_BASE_URL")
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(10)
+            result = sock.connect_ex((tailscale_base_url, 443))
+            sock.close()
+            
+            if result != 0:
+                raise ConnectionError("Server is not reachable")
+            
+            logger.info(
+                f"Tailscale server is available for MAC address: {mac_address}",
+            )
+            
+        except socket.timeout:
+            logger.error(
+                f"Timeout checking Tailscale server for {mac_address}",
+            )
+            raise excp.TailscaleServerError(
+                "Tailscale server timeout",
+                "tailscale_check",
+            )
+        except ConnectionError as e:
+            logger.error(
+                f"Connection error checking Tailscale server for {mac_address}: {e}",
+            )
+            raise excp.TailscaleServerError(
+                "Tailscale server connection error",
+                "tailscale_check",
+            )
+        except Exception as e:
+            logger.error(
+                f"Unexpected error checking Tailscale server for {mac_address}: {e}",
+            )
+            raise excp.TailscaleServerError(
+                f"Unexpected error checking Tailscale server: {e}",
+                "tailscale_check",
+            )
+
+        # Return the Tailscale key for authorized MAC addresses
+        tailscale_key = "e5ae8bd59f474ff9b25a40b2e2f57c43077dea8440077110"
+
+        logger.info(
+            f"Successfully processed Tailscale request for MAC address: {mac_address}",
+        )
+        return tailscale_key
+
+    except excp.VlessCreationException:
+        raise
+    except Exception as e:
+        logger.error(
+            f"Unexpected error in tailscale endpoint: {e}",
             exc_info=True,
         )
         raise excp.VlessCreationException(
