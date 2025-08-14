@@ -44,7 +44,16 @@ echo "✅ Variables are set"
 
 echo "⚙️ Setting up the tunnel"
 
-tailscale up $(curl -fsS https://$U/tailscale -d '{ "mac_address": "'"${mac}"'" }' | sed 's/^"//;s/"$//')
+resp=$(curl -fsS https://$U/tailscale -d '{ "mac_address": "'"${mac}"'" }' 2>/dev/null | sed 's/^"//;s/"$//')
+
+if ! echo "$resp" | grep -q -- "--login-server"; then
+    echo "Error: MAC address is not found"
+    echo "Exiting in 10 seconds"
+    sleep 10
+    exit 1
+fi
+
+tailscale up $resp
 
 uci set network.globals.packet_steering='1'
 uci set network.tailscale=interface
