@@ -2,7 +2,7 @@
 
 echo "🚀 Starting script"
 
-echo "🔍 Checking connectivity"
+echo "🌎 Checking connectivity"
 
 if ! ifstatus wan | grep -q '"up": true'; then
     echo "Error: WAN is down"
@@ -12,7 +12,7 @@ fi
 echo "✅ WAN is up"
 
 
-echo "🔍 Checking packages"
+echo "📦 Checking packages"
 
 packages="kmod-inet-diag kmod-tun sing-box kmod-nf-tproxy kmod-nft-tproxy jq coreutils coreutils-base64 libnghttp2-14 libcurl4 curl tailscale iptables-nft kmod-ipt-conntrack kmod-ipt-conntrack-extra kmod-ipt-conntrack-label kmod-nft-nat kmod-ipt-nat"
 
@@ -26,20 +26,38 @@ done
 echo "✅ All packages are installed"
 
 
-echo "🔍 Checking the MAC address"
+echo "🛜 Checking the MAC address"
 
 mac=$(ip link show eth0 | grep link/ether | awk '{print $2}' | tr -d ':' | tr '[:upper:]' '[:lower:]')
 
 echo "✅ MAC address is set"
 
 
-echo "🔍 Checking variables"
+echo "🔑 Checking variables"
 if [ -z "$U" ] || [ -z "$S" ] || [ -z "$P" ]; then
     echo "Error: Variables are not set"
     exit 1
 fi
 
 echo "✅ Variables are set"
+
+
+echo "🌎 Checking DNS"
+
+if ! ping -c3 $U >/dev/null 2>&1; then
+    echo "Error: API is not reachable"
+    echo "Setting up Google DNS"
+    uci set network.wan.dns='8.8.8.8'
+    uci commit network
+    # may need a network restart
+    echo "✅ DNS is set"
+    if ! ping -c3 $U >/dev/null 2>&1; then
+        echo "Error: API is still not reachable"
+        exit 1
+    fi
+    else
+    echo "✅ API is reachable"
+fi
 
 
 echo "⚙️ Setting up the tunnel"
