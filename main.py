@@ -175,7 +175,7 @@ class VlessCreation:
                 "tag": os.getenv("REMNA_TAG"),
                 "expireAt": expire_at,
                 "status": os.getenv("REMNA_DEFAULT_STATUS"),
-                "activeUserInbounds": [os.getenv("REMNA_INBOUND")],
+                "activeInternalSquads": [os.getenv("REMNA_INBOUND")],
             }
         except Exception as e:
             logger.error(
