@@ -4,12 +4,12 @@ echo "🚀 Starting script"
 
 echo "🌎 Checking connectivity"
 
-if ! ifstatus wan | grep -q '"up": true'; then
-    echo "Error: WAN is down"
+if ! ifstatus {wan,wwan} | grep -q '"up": true'; then
+    echo "Error: Network is down"
     exit 1
 fi
 
-echo "✅ WAN is up"
+echo "✅ Network is up"
 
 
 echo "📦 Checking packages"
@@ -48,6 +48,7 @@ if ! ping -c3 $U >/dev/null 2>&1; then
     echo "Error: API is not reachable"
     echo "Setting up Google DNS"
     uci set network.wan.dns='8.8.8.8'
+    uci set network.wwan.dns='8.8.8.8'
     uci commit network
     # may need a network restart
     echo "✅ DNS is set"
