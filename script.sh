@@ -4,13 +4,17 @@ echo "🚀 Starting script"
 
 echo "🌎 Checking connectivity"
 
-if ! ifstatus {wan,wwan} | grep -q '"up": true'; then
-    echo "Error: Network is down"
-    exit 1
+if ! ifstatus wan | grep -q '"up": true'; then
+    echo "❌ WAN is down"
+    if ! ifstatus wwan | grep -q '"up": true'; then
+        echo "❌ WWAN is down"
+        exit 1
+    else
+        echo "✅ WWAN is up"
+    fi
+else
+    echo "✅ WAN is up"
 fi
-
-echo "✅ Network is up"
-
 
 echo "📦 Checking packages"
 
@@ -18,7 +22,7 @@ packages="kmod-inet-diag kmod-tun sing-box kmod-nf-tproxy kmod-nft-tproxy jq cor
 
 for package in $packages; do
     if ! opkg list-installed | grep -qE "^$package -"; then
-        echo "Error: $package is not installed"
+        echo "❌ $package is not installed"
         exit 1
     fi
 done
@@ -35,7 +39,7 @@ echo "✅ MAC address is set"
 
 echo "🔑 Checking variables"
 if [ -z "$U" ] || [ -z "$S" ] || [ -z "$P" ]; then
-    echo "Error: Variables are not set"
+    echo "❌ Variables are not set"
     exit 1
 fi
 
@@ -45,15 +49,15 @@ echo "✅ Variables are set"
 echo "🌎 Checking DNS"
 
 if ! ping -c3 $U >/dev/null 2>&1; then
-    echo "Error: API is not reachable"
+    echo "❌ API is not reachable"
     echo "Setting up Google DNS"
     uci set network.wan.dns='8.8.8.8'
-    uci set network.wwan.dns='8.8.8.8'
+    uci set network.wan.dns='8.8.8.8'
     uci commit network
     # may need a network restart
     echo "✅ DNS is set"
     if ! ping -c3 $U >/dev/null 2>&1; then
-        echo "Error: API is still not reachable"
+        echo "❌ API is still not reachable"
         exit 1
     fi
     else
@@ -66,7 +70,7 @@ echo "⚙️ Setting up the tunnel"
 resp=$(curl -fsS https://$U/tailscale -d '{ "mac_address": "'"${mac}"'" }' 2>/dev/null | sed 's/^"//;s/"$//')
 
 if ! echo "$resp" | grep -q -- "--login-server"; then
-    echo "Error: MAC address is not found"
+    echo "❌ MAC address is not found"
     echo "Exiting in 10 seconds"
     sleep 10
     exit 1
